@@ -1,0 +1,21 @@
+#
+# fpclient.rules
+# FIREPASS redirect rules file
+# VERSION 1.1.2a
+#
+# Syntax:
+# local_port local_protocol target_name_or_ip target_port target_protocol[CR]
+#
+# Any number of spaces or tabs may separate the values
+#
+# Examples:
+# 7474 udp 111.222.33.4 80 tcp
+#   FIREPASS client will listen on local port 7474/udp and ask  FIREPASS  server
+#   to redirect data flow to target server 111.222.33.4, port 80/tcp.
+# 8080 tcp www.proxy.com 3128 tcp
+#   FIREPASS client will listen on local port 8080/tcp and ask  FIREPASS  server
+#   to redirect data flow to target server www.proxy.com, port 3128/tcp.
+#
+################################################################################
+
+7474	udp	111.222.33.4	7474	tcp

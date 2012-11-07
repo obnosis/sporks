@@ -1,0 +1,13 @@
+#
+# fpclient.allow
+# FIREPASS client access list
+# VERSION 1.1.2a
+#
+# Syntax:
+# <ip>[CR]
+#
+# one IP on each line
+#
+################################################################################
+
+127.0.0.1

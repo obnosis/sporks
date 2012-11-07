@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+
+# == Synopsis
+#
+# epub: run the event publisher
+#
+# == Usage
+#
+# epub [OPTION]
+#
+# -h, --help:
+#    show help
+#
+# -d, --debug:
+#    turn on debug logging
+#
+# -c, --config filename
+#    specify a configuration file
+#
+# -p, --publishers directory
+#    specify the directory for finding publishers
+#
+# -v, --verbose
+#    print info to the standard output
+
+require 'getoptlong'
+require 'rdoc/usage'
+require 'refinery'
+
+pidfile = 'epub.pid'
+
+options = {}
+opts = GetoptLong.new(
+  [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
+  [ '--debug', '-d', GetoptLong::NO_ARGUMENT ],
+  [ '--config', '-c', GetoptLong::REQUIRED_ARGUMENT],
+  [ '--publishers', '-p', GetoptLong::REQUIRED_ARGUMENT],
+  [ '--verbose', '-v', GetoptLong::NO_ARGUMENT],
+  [ '--pidfile', GetoptLong::REQUIRED_ARGUMENT]
+)
+opts.each do |opt, arg|
+  case opt
+  when '--help'
+    RDoc::usage
+  when '--debug'
+    options[:debug] = true
+  when '--config'
+    options[:config] = arg
+  when '--publishers'
+    options[:publishers] = arg
+  when '--verbose'
+    options[:verbose] = true
+  when '--pidfile'
+    pidfile = arg
+  end
+end
+
+open(pidfile, 'w') do |f|
+  f << $$
+end
+
+Refinery::EventPublisher.new(options).run
+
+File.delete(pidfile)

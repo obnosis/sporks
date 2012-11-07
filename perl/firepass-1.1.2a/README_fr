@@ -1,0 +1,220 @@
+FIREPASS VERSION 1.1.2a
+=======================
+
+================================================================================
+
+GRAY-WORLD.NET / FIREPASS
+=========================
+
+  FIREPASS fait partie des projets Gray-World.net.
+
+  Notre équipe - Gray-World - présente sur le site http://www.gray-world.net nos
+  projets et publications relatifs au contournement des systèmes  de contrôle d'
+  accès réseau et à la sécurité des réseaux.
+
+================================================================================
+
+A PROPOS
+========
+
+  FIREPASS un outil de tunneling qui permet de  passer  outre  les  restrictions
+  imposees par un pare-feu en encapsulant les flux de donnees dans des  flux  de
+  requetes HTTP POST autorises par le systeme de controle  d'acces  reseau.  
+  Les protocoles bases sur TCP ou  UDP  peuvent  etre  encapsules par  FIREPASS.
+  A l'heure actuelle, les parties cliente et serveur sont toutes deux ecrites en
+  Perl. La partie serveur est executee en tant que CGI.
+
+  Pour utiliser FIREPASS, vous avez besoin de :
+
+     * Une station situee sur le reseau interne avec le support  Perl  et  etant
+       autorisee a envoyer des messages HTTP au reseau externe  (Internet)  soit
+       directement, soit via un proxy HTTP.
+
+     * Un serveur HTTP situe sur le reseau externe (egalement  avec  le  support
+       Perl) sur lequel vous  avez  la  possibilite  d'installer / executer  des
+       scripts CGI et qui puisse etablir des connexions  sortantes  (La  plupart
+       des ISP commerciaux et certains ISP gratuits permettent cela).
+
+  Le principal avantage de FIREPASS est que vous pouvez utiliser plusieurs types
+  d'installation pour la partie serveur situee sur le reseau  externe.  Vous  n'
+  avez pas besoin d'ouvrir de ports sur la station externe. 
+  Tout parait normal du point de vue des administrateurs des reseaux interne  et
+  externe. Il n'y a qu'un dialogue HTTP entre le client et le serveur.  Le  seul
+  "probleme" est que les messages HTTP sont emis avec une frequence  importante.
+  Ceci est cependant configurable au niveau du client FIREPASS avec  une  option
+  gerant le delai a utiliser entre chaque requete HTTP.
+  FIREPASS peut etre  utilise  pour  des  protocoles  n'etant  pas  critiquement
+  dependants du temps.
+  FIREPASS peut egalement etre utilise pour realiser la tache inverse, quand  le
+  script serveur est localise sur le serveur Web interne d'une entreprise et que
+  son client se situe sur le reseau externe.
+
+  Cette version de FIREPASS etant  une  version  alpha,  quelques  bugs  peuvent
+  exister...  ainsi   que   des  bugs  de  SECURITE.  Lisez,  s'il  vous  plait,
+  attentivement la  section  "FONCTIONNEMENT"  pour  comprendre  clairement  les
+  risques auxquels vous vous exposez en utilisant FIREPASS.
+  Je ne vous garantis aucunement que FIREPASS fonctionnera correctement.
+
+FONCTIONNEMENT
+==============
+
+  Clients TCP/UDP						Services TCP/UDP
+   \\\                                                            ^^^
+ (5)\\\(1)                                                     (3)|||
+     \\\                                                          |||
+  |----------|        (2)        |----------|        (2)        |----------|
+  | HOTE "A" | --- HTTP POST --> | Hote "B" | --- HTTP POST --> | Hote "C" |
+  |          | <---------------- |HTTP proxy| <---------------- | httpd    |
+  |----------|        (4)        |----------|        (4)        |----------|
+  Client FIREPASS                (optionnel)                    Serveur FIREPASS
+  fpclient.pl                                              /cgi-bin/fpserver.cgi
+
+  (1) Le client TCP/UDP ouvre une connexion a destination  de  l'hote  "A",  sur
+      lequel le demon client FIREPASS est en ecoute sur un port TCP/UDP
+  (2) Le client FIREPASS accepte  la  connexion,  lit  les  donnees,  ouvre  une
+      connexion vers l'hote C directement ou via un proxy  HTTP  et  envoie  les
+      donnees au serveur httpd (sur le port TCP 80 par defaut) dans une  requete
+      HTTP POST destinee au  script  serveur  FIREPASS.  Si  c'est  la  premiere
+      requete d'une session, le client FIREPASS ajoute un champ additionnel dans
+      le header HTTP avec une regle de redirection.
+  (3) Le serveur FIREPASS lit les donnees depuis STDIN (comme specifie  dans  le
+      protocole CGI). Si ces donnees appartiennent au premier message HTTP de la
+      session, il forke un gestionnaire de connexion,  sinon  il  transfere  les
+      donnees au gestionnaire de connexion correspondant via  un  fichier  situe
+      dans un repertoire local de l'hote "C". Le gestionnaire de connexions  lit
+      les donnees depuis le fichier local puis ouvre une connexion TCP/UDP  vers
+      le service de destination et les envoie. Si des donnees doivent etre  lues
+      depuis le service destinataire, il les lit et les transfere ensuite au cgi
+      serveur FIREPASS via un autre fichier local situe sur l'hote "C".
+  (4) A chaque execution, le cgi serveur FIREPASS verifie si  des  donnees  sont
+      presentes dans le fichier local et le cas echeant  les  envoie  au  client
+      FIREPASS dans des messages de reponse HTTP.
+  (5) Le client FIREPASS recoit les donnees du  service  destinataire  dans  des
+      messages HTTP, les extrait et les renvoie a ses propres clients.
+
+      Et voila! S'il n'existe  pas  de  donnees  entrante/sortante,  le  client/
+      serveur FIREPASS envoie simplement des requetes/reponses HTTP vides.
+
+INSTALLATION
+============
+
+  Les commandes shell sont placees entre ``.
+
+  HOTE SERVEUR (httpd)
+  --------------------
+
+    * Placez le script serveur FIREPASS 'fpserver/fpserver.cgi' et le repertoire
+      'fpserver/conf' dans le repertoire 'cgi-bin'  de  l'hote  et  verifiez  le
+      chemin vers Perl.
+    * Creez deux repertoires 'inout' et 'log' (par exemple dans  /var/tmp)
+
+        `chmod 777 inout log` ou
+        `chown <httpd_user>:<httpd_group> inout log && chmod 700 inout log`
+
+      fpserver.cgi doit posseder des droits en lecture/ecriture sur les fichiers
+      presents dans ces repertoires.
+    * Mettez a jour les fichiers de configuration du serveur FIREPASS:
+
+      conf/fpserver.conf  : Fichier de configuration
+      conf/fpserver.allow : Fichier d'autorisation d'acces.
+
+    * Executez fpserver.cgi avec l'option  'configure'  et  le  chemin  vers  le
+      fichier fpserver.conf:
+
+        `./fpserver.cgi configure conf/fpserver.conf`
+
+      Apres cette configuration, le fichier fpcnf.cache sera cree aux  cotes  du
+      fichier fpserver.cgi.
+
+  HOTE CLIENT (httpd)
+  -------------------
+
+    * Verifiez le chemin vers perl dans le script FIREPASS client fpclient.pl.
+    * Mettez a jour les fichiers de configuration du client FIREPASS:
+
+      conf/fpclient.conf  : Directives de configuration;
+      conf/fpclient.rules : Regles de redirection;
+      conf/fpserver.allow : Fichier d'autorisations d'acces.
+
+    Tous les chemins dans les fichiers '.conf' doivent etre absolus ou  relatifs
+    a l'emplacement du script.
+
+  -NOTE-------------------------------------------------------------------------
+    Certains serveurs httpd (Apache version russe par exemple)  peuvent  changer
+    les donnees avant de les transmettre au script cgi de facon a  supporter  l'
+    encodage Cyrillique par defaut, ce qui corrompt le flux de donnees.
+    Supprimez cette fonctionnalite.
+    Pour la version russe d'Apache, ajoutez ces quelques lignes a httpd.conf:
+
+      <Location /cgi-bin/fpserver.cgi>
+            CharsetDisable On
+      </Location>
+
+      .. Et redemarrez le demon httpd.
+
+  ------------------------------------------------------------------------------
+
+USAGE
+=====
+
+  Executez le client FIREPASS:
+  ./fpclient.pl conf/fpclient.conf [SERVER]/cgi-bin/fpserver.cgi
+
+PLATE-FORMES
+============
+
+  J'ai teste FIREPASS sur :
+     * SunOS 5.8 + Perl 5.005_03;
+     * Mandrake Linux (kernel version 2.4.19) + Perl 5.8.0;
+     * Windows XP & 2000 + ActivePerl 5.8.0.806;
+
+  J'espere que FIREPASS fonctionnera sur n'importe quelle plate-forme  UNIX,  et
+  meme peut etre sur des environnements Win32 (non teste). Si ce  n'est  pas  le
+  cas, contactez moi et j'essaierai de vous aider.
+
+EXEMPLES
+========
+
+  J'ai utilise FIREPASS avec succes pour encapsuler les protocoles suivants:
+     * TELNET, pas trop vite ;)
+     * HTTP; Cela  semble  marcher  pour  moi.  Je  vous  reccomande  d'utiliser
+       HTTP/1.0 + des connexions sans "Keep-Alive" avec votre navigateur  favori
+       de facon a eviter un trafic FIREPASS non necessaire.
+     * ICQ; J'ai rencontre quelques problemes. Au  niveau  de  la  procedure  de
+       handshake applicative, ICQ essaie d'etablir plus  de  12  connexions  TCP
+       simultanees. Certains proxys HTTP (y compris celui avec lequel j'ai joue)
+       n'autorise pas un aussi grand nombre de connexions  en  provenance  d'une
+       meme adresse IP. Et c'est pourquoi ces proxys repondent avec des messages
+       HTTP "Forbidden" sur  les  connexions  qui  suivent.  J'ai  contourne  ce
+       probleme : En conservant la connexion au client ICQ, le  client  FIREPASS
+       tente d'ouvrir des connexions au travers du proxy HTTP jusqu'a  ce  qu'il
+       recoive un message HTTP/200. Pour l'instant, ICQ fonctionne parfois, mais
+       pas tout le temps. Et ceci a  cause  d'erreurs  HTTP/404  "Not found"  en
+       provenance de login.icq.com que je juge sans raison (c'est mon  point  de
+       vue). Si quelqu'un de familier avec le protocole ICQ  souhaite  m'envoyer
+       un mail pour discuter du probleme ?
+
+LICENCE
+=======
+
+  FIREPASS est distribue sous les termes de la  licence  GNU  -  General  Public
+  License version 2.0.
+  Consultez le fichier COPYING pour plus de details.
+
+AUTEUR
+======
+
+  Alex Dyatlov <alex@gray-world.net>
+
+  Page officielle: http://gray-world.net
+  Un forum de discussion dedie a FIREPASS: http://gray-world.net/board/
+  Vos demandes de fonctionnalites et vos rapports de bugs sont les bienvenus.
+
+REMERCIEMENTS
+=============
+
+  Simon Castro <scastro@entreelibre.com>
+    README en francais, tests de FIREPASS et verification des textes anglais.
+
+  Hadi El-Khoury <helkhoury@entreelibre.com>
+    Verification des textes anglais.

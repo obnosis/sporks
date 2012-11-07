@@ -1,0 +1,35 @@
+[20.09.2003] VERSION 1.1.2a
+
+  Minor changes:
+    * New FIREPASS client directive :
+      <proxyresolve> - use HTTP proxy to resolve hostnames.
+  Minor corrections:
+    * Client : UDP protocol related bug was fixed.
+
+[25.06.2003] VERSION 1.1.1a
+
+  Major changes:
+    * The FIREPASS client and server HTTP Basic Authorization support was added.
+  Minor changes:
+    * WIN bugs was fixed.
+
+[21.06.2003] VERSION 1.1.0a
+
+  Major changes:
+    * The FIREPASS server may now act as a proxy for another FIREPASS server.
+    * A Firepass  server session timeout  option was added.  The FIREPASS server
+      closes session if it does not receive client HTTP request before a timeout
+      period.
+    * Server: config file fpserver/conf/fpserver.conf was created.
+  Minor changes:
+    * Some changes in the client config file: useacl, log, logf directives.
+
+[31.05.2003] VERSION 1.0.2a
+
+  Minor corrections:
+    * A bug in the fpclient script that caused child processes  to stay  in  the
+      'defunct' state after termination was fixed.
+
+[19.05.2003] VERSION 1.0.1a
+
+  * The first FIREPASS public release, alpha version.

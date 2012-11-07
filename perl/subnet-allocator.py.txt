@@ -1,0 +1,127 @@
+#
+# subnet_allocator.py by Eli Fulkerson
+#
+# http://www.elifulkerson.com
+#
+
+import string
+
+def drawsubnet (draw_from, draw_to, interesting, networknumber, count=0):
+
+        spacer = " " * count
+        antispacer = " " * (20 - count)
+
+        number_of_hosts = num_hosts(32 - draw_from) + " hosts"
+        
+        networks_under = pow(2,(draw_to - draw_from))
+        if networks_under > 1:
+            networks_under = str(networks_under)
+            networks_under = " - (" + networks_under + " /" + str(draw_to) + "'s under)"
+        else:
+            networks_under = ""
+
+        net = base10_to_ip(networknumber)
+        mask = subnetmask(draw_from)
+
+        allocatee = whats_allocated(net,mask)
+
+        if (draw_from <= draw_to or draw_from == interesting or allocatee):
+
+            if not allocatee:
+                allocatee = ""
+            else:
+                allocatee = " - " + allocatee
+                
+            print spacer + "/" +  str(draw_from) + antispacer + net + " - " + mask +" - "+ number_of_hosts + allocatee + networks_under
+
+        if (draw_from < 30):
+                drawsubnet(draw_from+1, draw_to, interesting, networknumber + 0, count+1)
+                drawsubnet(draw_from+1, draw_to, interesting, networknumber + pow(2, (32-draw_from))/2, count+1)
+
+
+def whats_allocated(networknumber, subnetmask):
+    "Dirty little hack to stick some generic data into the output"
+    n = networknumber
+    m = subnetmask
+
+    if (n == "172.20.128.0" and m == "255.255.252.0"):
+        return "New York /22"
+    elif (n == "172.20.132.0" and m == "255.255.252.0"):
+        return "Los Angeles /22"
+    elif (n == "172.20.136.0" and m == "255.255.252.0"):
+        return "Chicago /22"
+    elif (n == "172.20.255.0" and m == "255.255.255.0"):
+        return "Management Networks"
+    elif (n == "172.20.255.0" and m == "255.255.255.248"):
+        return "Management network A"
+    elif (n == "172.20.255.8" and m == "255.255.255.248"):
+        return "Management network B"
+    elif (n == "172.20.252.0" and m == "255.255.252.0"):
+        return "Administrivia"
+
+    else:
+        return 0
+    
+
+def num_hosts(bits):
+    return str(pow(2,bits)-2)
+
+def subnetmask(bits):
+    "Convert.. for instance, 24 to '255.255.255.0'"
+    ones = bits
+    zeros = 32 - bits
+    mask = ("1" * ones) + ("0" * zeros)
+    mask = int(mask, 2)
+    mask = base10_to_ip(mask)
+    return mask
+
+def ip_to_base10(ip):
+    "Given an IP address, convert to base10 integer"
+    octets = string.split(ip, ".")
+
+    total = 0
+    total += int(octets[3])
+    total += int(octets[2]) * 256
+    total += int(octets[1]) * 65536
+    total += int(octets[0]) * 16777216
+
+    return total
+
+
+def base10_to_ip(num):
+    "Given an integer, convert to base2 dotted quad"
+    oct1 = num / 16777216
+    num = num % 16777216
+
+    oct2 = num / 65536
+    num = num % 65536
+
+    oct3 = num / 256
+    num = num % 256
+    
+    oct4 = num
+
+    return str(oct1) + "." + str(oct2) + "." + str(oct3) + "." + str(oct4)
+
+
+
+#The network number to start with...
+start = ip_to_base10("172.20.128.0")
+
+#An 'interesting' network size will always be shown, regardless if its used
+interesting = 22
+
+#The network size to start drawing from ( 0 to 30)
+draw_from = 17
+
+#the network size to stop drawing at (0 to 30, should be smaller (in size... /0 is largest, /30 smallest) than draw_from)
+draw_to = 18
+
+#OK, draw it
+drawsubnet(draw_from, draw_to, interesting, start)
+
+#start = ip_to_base10("192.168.0.0")
+#drawsubnet(20,24, start)
+
+
+

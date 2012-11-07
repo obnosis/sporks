@@ -1,0 +1,6 @@
+logs/*.log
+config/config.yml
+rdoc/*
+refinery-*.gem
+stats.db
+*.pid

@@ -1,0 +1,58 @@
+= Refinery
+
+Refinery is a distributed processing framework written in the Ruby
+programming language. It is designed to work with Amazon's Web
+Services such as SQS and S3 to distribute image and data processing
+across multiple severs to alleviate the need for heavy-duty data and
+image processing on web application servers.
+
+Interprocess messaging is accomplished through a distributed queue system such as Amazon SQS and data storage is accomplished through a distributed data store
+such as Amazon's S3.
+
+== Required Libraries
+
+* RightScale AWS
+* JSON
+* Moneta
+
+== Optional Libraries
+
+If you want to run the monitor then you'll need to install Sequel and have SQLite3 installed.
+
+If you want to run the stats server to view operational statistics
+about Refinery then you'll need to install Sequel, SQLite3 and Ramaze.
+
+== Executing
+
+Refinery have several executable scripts that are used to launch the various components:
+
+=== bin/refinery
+
+This command executes the refinery execution server. This is where jobs
+are run.
+
+Example: bin/refinery -c config/config.yml
+
+=== bin/epub
+
+This command executes all publishers that fire on a regular basis.
+
+Example: bin/epub -c config/config.yml
+
+=== bin/pubnow
+
+This command executes a single publisher once.
+
+Example: bin/pubnow -c config/config.yml sample
+
+== Tests
+
+To run the tests, do one of the following:
+
+* Use autotest
+* Use the command `rake`
+* Run by hand with `ruby -Ilib -Itest unit/test_to_run.rb`
+
+=== bin/monitor
+
+This command is used to run the monitor system. The monitor system tracks the health of the refinery. The monitor should only be run on a single host.
